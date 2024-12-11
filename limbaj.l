@@ -2,7 +2,6 @@
     #include <iostream>
     #include <cstring>
     #include "tema.tab.h"
-
 }
 
 %}
@@ -10,13 +9,13 @@
 
 %%
 
-"begin" {return START;}
-"end" {return STOP;}
+"start" {return START;}
+"stop" {return STOP;}
 "return" {return RETURN;}
 
 "class" {return CLASS;}
 "public" {return PUBLIC;}
-"protected" {return PROTECTED;}
+"protected" {return PROTECTED;} //avem nevoie de protected?
 "private" {return PRIVATE;}
 "static" {return STATIC;}
 
@@ -32,7 +31,7 @@
 
 .[_a-zA-Z][_a-zA-Z0-9]* {yylval.id_var = strdup(yytext); return VAR_ID;}
 @[_a-zA-Z][_a-zA-Z0-9]* {yylval.id_var = strdup(yytext); return FUNCTION_ID;}
-&[_a-zA-Z][_a-zA-Z0-9]* {yylval.id_var = strdup(yytext); return STRUCTURE_ID;}
+&[_a-zA-Z][_a-zA-Z0-9]* {yylval.id_var = strdup(yytext); return CLASS_ID;}
 
 i_(0|[-]?([1-9][0-9]*)) {yylval.int_val = atoi(yytext); return INT_VALUE;}
 f_([-]?0|[-]?([1-9][0-9]*))\.[0-9]* {
