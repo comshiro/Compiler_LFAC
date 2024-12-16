@@ -1,16 +1,23 @@
+%{
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <cstring>
+using namespace std;
 
-{
-    
-}
-%union
-{
+extern int yylex();
+extern int yylineno;
+void yyerror(const char* s);
+%}
+
+%union {
     char* id_var;
+    char* id_func;
+    char* id_class;
     char* type_var;
-
     int int_val;
     float float_val;
-    double double_val;
-    long long_val;
     char char_val;
     char* string_val;
     bool bool_val;
@@ -18,22 +25,17 @@
 
 %token STOP RETURN 
 %token CLASS PUBLIC PROTECTED PRIVATE STATIC
-
-%token<tip_var> INT FLOAT DOUBLE LONG CHAR STRING BOOL VOID
-
+%token<type_var> INT FLOAT CHAR STRING BOOL VOID
 %token<id_var> START CLASS_ID FUNCTION_ID VAR_ID
-
 %token<int_val> INT_VALUE
 %token<float_val> FLOAT_VALUE
-%token<double_val> DOUBLE_VALUE
-%token<long_val> LONG_VALUE
 %token<char_val> CHAR_VALUE
 %token<string_val> STRING_VALUE
 %token<bool_val> BOOL_VALUE
-
 %token IF WHILE
 %token ASSIGN AND OR NOT
 %token EQUAL NOT_EQUAL LESS LESS_EQUAL GREATER GREATER_EQUAL
+%token PRINT TYPEOF
 
 %left OR
 %left AND
@@ -44,6 +46,11 @@
 %left NOT
 %left '{' '}' '[' ']' '(' ')'
 
+%type<type_var> TYPE
+%type<int_val> aexp
+%type<id_var> statement param 
+%type<id_var> param_list 
+%type<id_var> aexp bexp call
 
 %start program
 
@@ -56,102 +63,165 @@ program:    classes_section global_var global_func main_body
     | global_var main_body
     | global_func main_body
     | main_body
-       ;
-main_body:  declarations main {if (errorCount == 0) cout<< "The program is correct!" << endl;} //dc mai intai declarations?
-      ;
+    ;
+
+main_body: START seq STOP
+    ;
+
+seq: statement
+    | seq statement
+    ;
 
 classes_section: class
     | classes_section class
     ;
+
 global_func: func_decl
     | global_func func_decl
     ;
+
 global_var: var_decl
     | global_var var_decl
     ;
-class: ACCES_TYPE CLASS CLASS_ID '{' '}' ';'
-    | ACCES_TYPE CLASS CLASS_ID '{
-        class_body
-    }'
-    | ACCES_TYPE CLASS CLASS_ID ':' ACCES_TYPE CLASS_ID '{' '}' ';'
-    | ACCES_TYPE CLASS CLASS_ID ':' ACCES_TYPE CLASS_ID '{
-        class_body
-    }'
+
+class: acces_type CLASS CLASS_ID '{' '}'
+    | acces_type CLASS CLASS_ID '{' class_body '}'
+    | acces_type CLASS CLASS_ID ':' acces_type CLASS_ID '{' '}'
+    | acces_type CLASS CLASS_ID ':' acces_type CLASS_ID '{' class_body '}'
     ;
+
+acces_type: PUBLIC | PROTECTED | PRIVATE | STATIC
+    ;
+
 class_body: 
     | var_decl func_decl class_body
-    | ACCES_TYPE : var_decl func_decl class_body
-    | ACCES_TYPE : var_decl ACCES_TYPE func_decl class_body
-    | ACCES_TYPE : var_decl func_decl ACCES_TYPE class_body
+    | acces_type : var_decl func_decl class_body
+    | acces_type : var_decl acces_type func_decl class_body
+    | acces_type : var_decl func_decl acces_type class_body
     ;
 
-main : START list STOP  
-     ;
+var_decl: TYPE VAR_ID ';'           
+    | TYPE VAR_ID ASSIGN expression ';'
+    | TYPE VAR_ID '[' aexp ']' ';' 
+    | TYPE VAR_ID '[' aexp ']' ASSIGN expression ';'
+    ;
 
-declarations : decl           
-	      |  declarations decl    
-	      ;
+expression: aexp
+| bexp
+| call
+| VAR_ID
+| CHAR_VALUE
+| STRING_VALUE
+;
 
-decl       :  TYPE ID ';' { 
-                              if(!current->existsId($2)) {
-                                    current->addVar($1,$2);
-                              } else {
-                                   errorCount++; 
-                                   yyerror("Variable already defined");
-                              }
-                          }
-              | TYPE ID  '(' list_param ')' ';'
-           ;
+func_decl:
+    TYPE FUNCTION_ID '(' param_list ')' '{' seq '}' 
+    ;
 
-var_decl : TYPE ID ';'
-         | TYPE ID '=' NR ';'
-         | TYPE ID '[' NR ']' ';'
-         | TYPE ID '[' NR ']' '=' '{' list_param '}' ';'
-         ;
-func_decl : TYPE ID '(' list_param ')' '{' seq '}' 
-          | TYPE ID '(' ')' '{' seq '}' 
-          ;
-list_param : param
-            | list_param ','  param 
-            ;
-            
-param : TYPE ID 
-      ; 
-      
+param_list:
+    param
+    | param_list ',' param
+    | /* empty */
+    ;
 
-seq :  statement ';' 
-     | seq statement ';'
-     ;
+param:
+    TYPE VAR_ID 
+    | TYPE VAR_ID '[' ']'
+    ;
 
-statement: ID ASSIGN ID
-         | ID ASSIGN NR  	
-         | ID ASSIGN call
-         | ID ASSIGN aexp
-         | ID ASSIGN bexp	 
-         | ID '(' call_list ')'
-         ;
-        
-call_list : NR
-           | call_list ',' NR
-           ;
+seq: statement ';'
+    | seq statement ';'
+    ;
 
-aexp: NR '+' NR
-              | NR '-' NR
-              | NR '*' NR
-              | NR '/' NR
-              | '(' NR ')'
-              | NR '%' NR
-              ;
-bexp: NR '>' NR
-              | NR '<' NR
-              | NR '=' NR
-              | NR '!=' NR
-              | NR '<=' NR
-              | NR '>=' NR
-              | '!' NR
-              | NR '&&' NR
-              | NR '||' NR
-              ;
+statement: assignment
+    | condition
+    | loop
+    | return_statement
+    | function_call
+    | print_statement
+    | typeof_statement
+    ;
+
+assignment: VAR_ID ASSIGN expression ';'         
+    | TYPE VAR_ID ASSIGN expression ';'            
+    | VAR_ID '[' aexp ']' ASSIGN expression ';'
+    | TYPE VAR_ID '[' aexp ']' ASSIGN expression ';'
+    | CLASS_ID '.' VAR_ID ASSIGN expression ';'
+    ;
+
+condition:
+      if_statement
+    ;
+
+if_statement:
+      IF '(' expression ')' seq
+    ;
+
+loop:
+        WHILE '(' bexp ')' seq
+    ;
+
+return_statement:
+    RETURN expression ';'
+    ;
+
+function_call:
+    FUNCTION_ID '(' param_list ')' ';'
+    ;
+
+print_statement:
+    PRINT '(' expression ')' ';'
+    ;
+
+typeof_statement:
+    TYPEOF '(' expression ')' ';'
+    ;
+
+arithmetic_type:
+    | INT
+    | FLOAT
+    ;
+aexp: 
+    |arithmetic_type
+    |VAR_ID
+    |aexp '+' aexp
+    |aexp '-' aexp
+    |aexp '*' aexp
+    |aexp '/' aexp
+    | '(' aexp ')'
+    |aexp '%' aexp
+    | '-' aexp
+    ;
+
+bexp:
+    | BOOL_VALUE
+    | aexp LESS aexp
+    | aexp GREATER aexp
+    | aexp EQUAL aexp
+    | bexp NOT_EQUAL bexp
+    | aexp GREATER_EQUAL aexp
+    | aexp LESS_EQUAL aexp
+    | NOT bexp
+    | bexp AND bexp
+    | bexp OR bexp
+    | aexp LESS aexp
+    |'(' bexp ')'
+    ;
+
+call: FUNCTION_ID '(' param_list ')'
+    ;
+
+TYPE: INT | FLOAT | CHAR | STRING | BOOL | VOID
+    ;
+
+
 %%
-void yyerror(const char * s){
-     cout << "error:" << s << " at line: " << yylineno << endl;
+
+void yyerror(const char* s) {
+    cout << "error: " << s << " at line: " << yylineno << endl;
+}
+
+int main() {
+    yyparse();
+    return 0;
+}
