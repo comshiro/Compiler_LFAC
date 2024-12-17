@@ -8,7 +8,7 @@ using namespace std;
 int yylex(void);
 %}
 
-%option noyywrap yylineno
+%option noyywrap
 
 %%
 "begin"         { return START; }
@@ -75,15 +75,13 @@ s_\"[^\"\n]+\"  {
 }
 
 c_\"[^\"\n]\"  {
-    char* value = strdup(yytext + 2); 
-    yylval.char_val = strdup(value-1);
-    free(value);
+    yylval.char_val = yytext[2];
     return CHAR_VALUE;
 }
 
 [/\*]([^*]|\*[^/])*\*[/] { }
 [ \t\r]         { }
-\n              { yylineno++ }
+\n              { yylineno++; }
 .               { return yytext[0]; }
 
 %%

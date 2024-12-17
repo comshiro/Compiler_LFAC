@@ -1,0 +1,39 @@
+/* Class definition */
+public class &MyClass {
+    int I_myInt;
+
+
+
+
+
+
+    char C_myChar;
+    string S_myString;
+    bool B_myBool;
+        float @myFunction(int I_x, float F_y) {
+        I_myInt := I_x + i_10;
+        F_myFloat := F_y * f_2.5;
+        C_myChar := c_"A";
+        S_myString := s_"Hello, World!";
+        B_myBool := true;
+
+     
+    }
+}
+
+begin
+ 
+  
+    I_a := I_a + F_b; 
+ 
+    return i_0;
+     I_dd[i_1] := i_7 ;
+       Print(I_myInt);
+        Print(F_myFloat);
+        Print(C_myChar);
+        TypeOf(S_myString);
+        TypeOf(B_myBool);
+           int I_a := i_10;
+             float F_b := f_20.5;
+                Print(I_a);
+end
