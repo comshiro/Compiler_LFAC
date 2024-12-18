@@ -10,29 +10,16 @@ extern int yylineno;
 void yyerror(const char* s);
 
 
-void lookup(char* var) {
-    printf("Lookup: %s\n", var);}
+bool lookup(void* var) {
+    printf("Lookup");
+    return true;}
 
-bool is_int(void* value) {
-    return (value != NULL && ((int*)value) != NULL);
-
-bool compare_values(void* left, void* right, char* op) {
-    if (strcmp(op, "<") == 0) {
-        return (left < right);
-    } else if (strcmp(op, ">") == 0) {
-        return (left > right);
-    } else if (strcmp(op, "=") == 0) {
-        return (left == right);
-    } else if (strcmp(op, "<=") == 0) {
-        return (left <= right);
-    } else if (strcmp(op, ">=") == 0) {
-        return (left >= right);
-    } else if (strcmp(op, "!=") == 0) {
-        return (left != right);
-    }
-    return 0; 
+bool is_int(int value) {
+    return true;
 }
 
+bool compare_values(int left, int right, bool op) {
+    return true; 
 }
 
 %}
@@ -187,19 +174,19 @@ function_call:
     ;
 
 print_statement:
-    PRINT '(' expression ')' ';'{printf("print %s\n", $3); }
+    PRINT '(' expression ')' ';'{printf("print <expression>\n"); }
     ;
 
 TYPEOF_statement:
-    TYPEOF '(' expression ')' ';' {printf("type of %s\n", $3); }
+    TYPEOF '(' expression ')' ';' {printf("type of <expression>"); }
     ;
 
 expression: 
     function_call { $$ = $1; }     
-    | aexp { $$ = $1; }     
-    | CHAR_VALUE { $$ = $1; }     
+    | aexp { $$ = (void*)$1; }     
+    | CHAR_VALUE { $$ = (void*)$1; }     
     | STRING_VALUE { $$ = $1; }     
-    | bexp { $$ = $1; }     
+    | bexp { $$ = (void*)$1; }     
     ;
 
 aexp: 
@@ -248,7 +235,7 @@ aexp:
     ;
 
 bexp: 
-    BOOL_VALUE { $$ = $1; } 
+    BOOL_VALUE { $$ = (void*)$1; } 
     | B_VAR_ID { $$ = lookup($1); }
     | aexp comparison_op aexp
         {$$ = compare_values($1, $3, $2);}
@@ -284,7 +271,7 @@ var_decl:
 
 func_decl:
     type FUNCTION_ID '(' optional_param_list ')' '{' seq '}'
-    {printf("Function call: %s with %s\n ", $2, $4); }
+    {printf("Function call: %s with <parameters>\n ", $2); }
     ;
 
 optional_param_list:

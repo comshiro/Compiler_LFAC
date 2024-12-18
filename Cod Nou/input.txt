@@ -1,4 +1,4 @@
-/* Class definition */
+
 public class &MyClass {
     int I_myInt;
 
@@ -34,6 +34,6 @@ begin
         TypeOf(S_myString);
         TypeOf(B_myBool);
            int I_a := i_10;
-             float F_b := f_20.5;
-                Print(I_a);
+float F_b := f_20.5;
+Print(I_a);
 end
