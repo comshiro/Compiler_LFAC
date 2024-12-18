@@ -1,12 +1,6 @@
 
 public class &MyClass {
     int I_myInt;
-
-
-
-
-
-
     char C_myChar;
     string S_myString;
     bool B_myBool;
@@ -19,6 +13,31 @@ public class &MyClass {
 
      
     }
+}
+
+float I_name;
+
+int S_ab_c := i_1 + i_2;
+int S_ab_c := @myFunction(i_5, i_9);
+
+char C_word[i_10];
+
+float @functie ()
+{
+    return f_921;
+}
+
+float @functie2(float F_x, float F_y)
+{
+    if( F_x >= F_y) {
+    float F_z := F_x % F_y;
+
+    while( F_z && I_d)
+    {
+        I_i = I_i + i_1;
+    }
+    }
+    return f_921;
 }
 
 begin
