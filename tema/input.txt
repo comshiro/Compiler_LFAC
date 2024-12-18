@@ -1,0 +1,49 @@
+public class &MyClass {
+    int I_myInt;
+    char C_myChar;
+    string S_myString;
+    bool B_myBool;
+        float @myFunction(int I_x, float F_y) {
+        I_myInt := I_x + i_10;
+        F_myFloat := F_y * f_2.5;
+        C_myChar := c_"A";
+        S_myString := s_"Hello, World!";
+        B_myBool := true;
+
+     
+    }
+}
+
+float F_name;
+
+int I_ab_c := i_1 + i_2;
+float F_ab_c := f_7.5;
+
+char C_word[i_10];
+
+float @functie ()
+{
+    return f_92.1;
+}
+
+float @functie2(float F_x, int I_y)
+{
+    if( F_x >= I_y) {
+    float F_z := F_x % F_y;
+
+    while(true)
+    {
+        I_i := I_i + i_1;
+    }
+    }
+    return f_92.1;
+}
+
+begin
+    I_a := I_a + F_b; 
+    int I_a := i_10;
+    float F_b := f_20.5;
+    Print(I_a);
+    TypeOf(I_a);
+    return i_0;
+end
