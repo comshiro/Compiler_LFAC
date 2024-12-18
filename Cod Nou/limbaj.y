@@ -78,7 +78,6 @@ bool compare_values(void* left, void* right, char* op) {
 %type<id_var> param 
 %type<id_var> param_list 
 %type<int_val> aexp 
-%type<id_var> call
 %type<bool_val> bexp
 %type <type_var> type       // For the type
 %type <id_var> VAR_ID       // For variable names
@@ -158,6 +157,13 @@ condition:
 
 if_statement:
     IF '(' bexp ')' '{' seq '}'
+     {
+        printf("IF statement");
+        if ($3) {
+            $$ = $6; 
+            printf("IF statement body executed\n");
+        }
+    }
     ;
 
 loop:
@@ -189,7 +195,7 @@ TYPEOF_statement:
     ;
 
 expression: 
-    call { $$ = $1; }     
+    function_call { $$ = $1; }     
     | aexp { $$ = $1; }     
     | CHAR_VALUE { $$ = $1; }     
     | STRING_VALUE { $$ = $1; }     
@@ -259,10 +265,6 @@ comparison_op:
     | NOT_EQUAL { $$ = "!="; }
     | GREATER_EQUAL { $$ = ">="; }
     | LESS_EQUAL { $$ = "<="; }
-    ;
-
-call: 
-    FUNCTION_ID '(' optional_param_list ')'
     ;
 
 var_decl: 
