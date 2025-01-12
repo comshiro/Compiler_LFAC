@@ -74,6 +74,8 @@ bool compare_values(int left, int right, bool op) {
     char* string_val;
     bool bool_val;
     void* generic_val;
+
+    ASTNode* node;
 }
 
 %token STOP RETURN 
@@ -103,7 +105,7 @@ bool compare_values(int left, int right, bool op) {
 
 %type<id_var> param 
 %type<id_var> param_list 
-%type<int_val> aexp 
+%type <node> aexp
 %type<bool_val> bexp
 %type <type_var> type      
 %type <id_var> VAR_ID       
@@ -324,48 +326,45 @@ expression:
     ;
 
 aexp: 
-    INT_VALUE {$$ = $1; }
-    | FLOAT_VALUE {$$ = $1; }
-    | I_VAR_ID { lookup($1); }
-    | F_VAR_ID { lookup($1); }
+    INT_VALUE {$$ = new NumberNode($1, true); }
+    | FLOAT_VALUE {$$ = new NumberNode($1, false); }
+    | I_VAR_ID { 
+        VariableInfo* var = nullptr;
+        if (!lookupVariable($1, var)) {
+            yyerror("Variable not declared");
+        } else {
+            $$ = new VariableNode(var->value, var->type);
+        }
+     }
+    | F_VAR_ID { 
+        VariableInfo* var = nullptr;
+        if (!lookupVariable($1, var)) {
+            yyerror("Variable not declared");
+        } else {
+            $$ = new VariableNode(var->value, var->type);
+        }
+    }
     | aexp '+' aexp 
     {
-          if (is_int($1) && is_int($3)) {
-              $$ = $1 + $3; 
-          } else {
-              $$ = (float)$1 + (float)$3;  
-          }
+          $$ = new BinaryOpNode('+', $1, $3);
       }
 
     | aexp '-' aexp
     {
-          if (is_int($1) && is_int($3)) {
-              $$ = $1 - $3;  
-          } else {
-              $$ = (float)$1 - (float)$3;  
-          }
+          $$ = new BinaryOpNode('-', $1, $3);
       }
     | aexp '*' aexp
     {
-          if (is_int($1) && is_int($3)) {
-              $$ = $1 * $3; 
-          } else {
-              $$ = (float)$1 * (float)$3; 
-          }
+          $$ = new BinaryOpNode('*', $1, $3);
       }
     | aexp '/' aexp
     {
-          if (is_int($1) && is_int($3)) {
-              $$ = $1 / $3; 
-          } else {
-              $$ = (float)$1 / (float)$3; 
-          }
+            $$ = new BinaryOpNode('/', $1, $3);
       }
     | '(' aexp ')' { $$ = $2; }
     | aexp '%' aexp {
-        if (is_int($1) && is_int($3)) 
-              $$ = $1 % $3;  }
-    | '-' aexp {$$ = -$2;}
+        $$ = new BinaryOpNode('%', $1, $3);}
+    | '-' aexp {$$ = new UnaryNode('-', $2 );}
     ;
 
 bexp: 
