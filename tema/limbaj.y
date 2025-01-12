@@ -275,15 +275,44 @@ return_statement:
     ;
 
 function_call:
-    FUNCTION_ID '(' optional_param_list ')' ';' {$$ = $1; }
+    FUNCTION_ID '(' optional_param_list ')' ';'  
+    {
+        FunctionInfo* func = nullptr;
+        if (!lookupFunction($1, func)) {
+            yyerror("Function not declared");
+        } else {
+            if (func->paramTypes.size() != $3->paramCount) {
+                char error_msg[100];
+                sprintf(error_msg, "Function %s expects %lu parameters but got %d", 
+                    $1, func->paramTypes.size(), $3->paramCount);
+                yyerror(error_msg);
+            } else {
+                for (int i = 0; i < $3->paramCount; i++) {
+                    if (func->paramTypes[i] != $3->paramTypes[i]) {
+                        char error_msg[100];
+                        sprintf(error_msg, "Parameter %d type mismatch in function %s", i+1, $1);
+                        yyerror(error_msg);
+                    }
+                }
+                $$ = func->returnType;
+            }
+        }
+    }
     ;
-
 print_statement:
     PRINT '(' expression ')' ';'{printf("print <expression>\n"); }
     ;
 
 TYPEOF_statement:
-    TYPEOF '(' expression ')' ';' {printf("type of <expression>"); }
+    TYPEOF '(' expression ')' ';' {
+        printf("type of <expression>");
+        if ($3 == nullptr) {
+            yyerror("Cannot determine type of null expression");
+        } else {
+            printf("Type of expression: %s\n", $3->type.c_str());
+            $$ = $3->type;
+        }
+    }
     ;
 
 expression: 
