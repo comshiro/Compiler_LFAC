@@ -9,6 +9,7 @@ struct VariableInfo {
     std::string type;
     std::string name;
     std::string value;
+    std::string className;
 };
 
 struct FunctionInfo {
@@ -31,12 +32,13 @@ public:
     std::unordered_map<std::string, FunctionInfo> functions;
     std::unordered_map<std::string, ClassInfo> classes;
     SymTable* parent;
+    std::vector<SymTable*> children;
 
     SymTable(std::string name, SymTable* parent = nullptr)
         : name(name), parent(parent) {}
 
-    void insertVariable(std::string type, std::string name, std::string value = "") {
-        variables[name] = {type, name, value};
+    void insertVariable(std::string type, std::string name, std::string value = "", std::string className = "") {
+        variables[name] = {type, name, value, className};
     }
 
     void insertFunction(std::string name, std::string returnType, std::vector<std::string> paramTypes, std::string className = "") {
@@ -44,13 +46,39 @@ public:
     }
 
     void insertClass(std::string name) {
-        classes[name] = {name, memberVariables, memberFunctions};
+        classes[name] = {name, {}, {}};
     }
 
-    SymTable* findScope(std::string name) {
-        if (this->name == name) return this;
-        if (parent) return parent->findScope(name);
-        return nullptr;
+   VariableInfo* lookupVariable(const std::string& name) {
+        if (variables.find(name) != variables.end()) {
+            return &variables[name];
+        } else {
+            return nullptr;
+        }
+    }
+
+    FunctionInfo* lookupFunction(const std::string& name) {
+        if (functions.find(name) != functions.end()) {
+            return &functions[name];
+        } else {
+            return nullptr;
+        }
+    }
+
+    ClassInfo* lookupClass(const std::string& name) {
+        if (classes.find(name) != classes.end()) {
+            return &classes[name];
+        } else {
+            return nullptr;
+        }
+    }
+
+    bool isVariableInCurrentScope(const std::string& name) {
+        return variables.find(name) != variables.end();
+    }
+
+    bool areVariablesInSameScope(const std::string& name1, const std::string& name2) {
+        return variables.find(name1) != variables.end() && variables.find(name2) != variables.end();
     }
 
     void print(std::ostream& out) {

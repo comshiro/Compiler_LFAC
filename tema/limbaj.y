@@ -141,7 +141,7 @@ global_section:
     ;
 
 main_body: 
-    START seq STOP
+    START  { enterScope("main"); } seq STOP { exitScope(); }
     ;
 
 seq: 
@@ -165,49 +165,113 @@ assignment:
     VAR_ID ASSIGN expression ';'     
     {
         printf("Assignment: %s = expression\n", $1);
-        $$ = $1; 
-    }       
+        
+        VariableInfo* var = nullptr;
+        if (!lookupVariable($1, var)) {
+            yyerror("Variable not declared");
+        } else {
+            if (var->type != $3->type) 
+                char error_msg[100];
+                sprintf(error_msg, "Type mismatch in assignment. Expected %s but got %s", 
+                    var->type.c_str(), $3->type.c_str());
+                yyerror(error_msg);
+            } else {
+                var->value = $3->value;
+            }
+        }          
     | VAR_ID '[' aexp ']' ASSIGN expression ';'
      { 
-        printf("Array Assignment: %s[%d] = expression\n", $1, $3); 
-        $$ = $1; 
+        VariableInfo* var = nullptr;
+        if (!lookupVariable($1, var)) {
+            yyerror("Array not declared");
+        } else {
+            if ($3 < 0) {
+                yyerror("Array index cannot be negative");
+        } else {
+            if (var->type != $6->type) {
+                char error_msg[100];
+                sprintf(error_msg, "Type mismatch in array assignment. Expected %s but got %s", 
+                    var->type.c_str(), $6->type.c_str());
+                yyerror(error_msg);
+            } else {
+                var->value = $6->value;
+                printf("Array Assignment: %s[%d] = %s\n", $1, $3, var->value.c_str());
+            }
+        }
     }
+}
     | CLASS_ID '.' VAR_ID ASSIGN expression ';'
     { 
-        printf("Class Assignment: %s.%s = expression\n", $1, $3); 
-        $$ = $3; 
+    ClassInfo* cls = nullptr;
+    if (!lookupClass($1, cls)) {
+        yyerror("Class not declared");
+    } else {
+        if (cls->memberVariables.find($3) == cls->memberVariables.end()) {
+            yyerror("Class member not declared");
+        } else {
+            VariableInfo& memberVar = cls->memberVariables[$3];
+            if (memberVar.type != $5->type) {
+                char error_msg[100];
+                sprintf(error_msg, "Type mismatch in class member assignment. Expected %s but got %s", 
+                    memberVar.type.c_str(), $5->type.c_str());
+                yyerror(error_msg);
+            } else {
+                memberVar.value = $5->value;
+                printf("Class Assignment: %s.%s = %s\n", $1, $3, memberVar.value.c_str());
+            }
+        }
     }
-    ;
+}
+;
 
 condition:
     if_statement
     ;
 
 if_statement:
-    IF '(' bexp ')' '{' seq '}'
+    IF '(' bexp ')' { enterScope("if");} '{' seq '}'
      {
         printf("IF statement");
         if ($3) {
-            $$ = $6; 
-            printf("IF statement body executed\n");
+            $$ = $8;  
         }
+        exitScope();
     }
     ;
 
 loop:
-    WHILE '(' bexp ')' '{' seq '}' {
+    WHILE '(' bexp ')' {enterScope("while");} '{' seq '}' {
         if ($3) {
             printf("While condition is true\n");
-            $$ = $6; 
+            $$ = $7; 
         } else {
             printf("While condition is false, skipping loop body\n");
             $$ = NULL;  
         }
+        exitScope();
     }
     ;
 
 return_statement:
-    RETURN expression ';' { $$ = $2; }
+    RETURN expression ';' 
+    {
+        SymTable* scope = currentScope;
+        while (scope != nullptr && scope->name != "main" && !scope->isFunction) {
+            scope = scope->parent;
+        }
+        
+        if (scope == nullptr || scope->name == "main") {
+            yyerror("Return statement outside of function");
+        } else {
+            if (scope->returnType != $2->type) {
+                char error_msg[100];
+                sprintf(error_msg, "Return type mismatch. Expected %s but got %s", 
+                    scope->returnType.c_str(), $2->type.c_str());
+                yyerror(error_msg);
+            }
+            $$ = $2;
+        }
+    }
     ;
 
 function_call:
