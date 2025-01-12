@@ -1,0 +1,21 @@
+START
+    (* Declare a class *)
+    PUBLIC CLASS MyClass {
+        INT a;
+        FLOAT b;
+        
+        PUBLIC VOID myFunction(INT x, FLOAT y) {
+            a = x + y;
+            PRINT(a);
+        }
+    }
+
+    // Main body
+    INT main() {
+        INT a = 10;
+        FLOAT b = 20.5;
+        a = a + b;
+        PRINT(a);
+        RETURN 0;
+    }
+STOP

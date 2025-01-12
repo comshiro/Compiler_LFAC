@@ -9,8 +9,6 @@ public class &MyClass {
         C_myChar := c_"A";
         S_myString := s_"Hello, World!";
         B_myBool := true;
-
-     
     }
 }
 

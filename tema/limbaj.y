@@ -3,16 +3,42 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <stack>
 #include <cstring>
+#include "symtable.h"
+#include <fstream>
 using namespace std;
 extern int yylex();
 extern int yylineno;
 void yyerror(const char* s);
 
+SymTable globalScope("global");
+stack<SymTable*> scopeStack;
 
-bool lookup(void* var) {
-    printf("Lookup");
-    return true;}
+void enterScope(const std::string& name) {
+    SymTable* newScope = new SymTable(name, scopeStack.empty() ? &globalScope : scopeStack.top());
+    scopeStack.push(newScope);
+}
+
+void exitScope() {
+    if (!scopeStack.empty()) {
+        scopeStack.pop();
+    }
+}
+
+bool lookupVariableInScope(SymTable* scope, const std::string& name, VariableInfo*& result) {
+    if (scope == nullptr) return false;
+    result = scope->lookupVariable(name);
+    if (result != nullptr) return true;
+    for (SymTable* child : scope->children) {
+        if (lookupVariableInScope(child, name, result)) return true;
+    }
+    return false;
+}
+
+bool lookupVariable(const std::string& name, VariableInfo*& result) {
+    return lookupVariableInScope(&globalScope, name, result);
+}
 
 bool is_int(int value) {
     return true;

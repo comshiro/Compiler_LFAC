@@ -20,6 +20,8 @@ struct FunctionInfo {
 
 struct ClassInfo {
     std::string name;
+    std::unordered_map<std::string, VariableInfo> memberVariables;
+    std::unordered_map<std::string, FunctionInfo> memberFunctions;
 };
 
 class SymTable {
@@ -42,7 +44,7 @@ public:
     }
 
     void insertClass(std::string name) {
-        classes[name] = {name};
+        classes[name] = {name, memberVariables, memberFunctions};
     }
 
     SymTable* findScope(std::string name) {
@@ -77,5 +79,5 @@ public:
 
     write(STDOUT_FILENO, output.c_str(), output.size());
 }
-
+};
 #endif // SYMTABLE_H
