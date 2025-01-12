@@ -13,16 +13,21 @@ extern int yylineno;
 void yyerror(const char* s);
 
 SymTable globalScope("global");
-stack<SymTable*> scopeStack;
+SymTable* currentScope = &globalScope;
 
 void enterScope(const std::string& name) {
     SymTable* newScope = new SymTable(name, scopeStack.empty() ? &globalScope : scopeStack.top());
     scopeStack.push(newScope);
 }
 
+void enterScope(const std::string& name) {
+    SymTable* newScope = new SymTable(name, currentScope);
+    currentScope = newScope;
+}
+
 void exitScope() {
-    if (!scopeStack.empty()) {
-        scopeStack.pop();
+    if (currentScope->parent != nullptr) {
+        currentScope = currentScope->parent;
     }
 }
 
@@ -38,6 +43,14 @@ bool lookupVariableInScope(SymTable* scope, const std::string& name, VariableInf
 
 bool lookupVariable(const std::string& name, VariableInfo*& result) {
     return lookupVariableInScope(&globalScope, name, result);
+}
+
+bool isVariableInCurrentScope(const std::string& name) {
+    return currentScope->isVariableInCurrentScope(name);
+}
+
+bool areVariablesInSameScope(const std::string& name1, const std::string& name2) {
+    return currentScope->areVariablesInSameScope(name1, name2);
 }
 
 bool is_int(int value) {
